@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أكاديمية الباحث | Researcher Academy</title>
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+        body { font-family: 'Tajawal', sans-serif; background-color: #050a14; color: white; margin: 0; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        
+        @keyframes gradientMove { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+        .moving-line-thick { height: 6px; background: linear-gradient(90deg, #2563eb, #f97316, #2563eb); background-size: 200% auto; animation: gradientMove 2s linear infinite; }
+        
+        @keyframes dropIn { 0% { transform: translateY(-50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        .loader-dot { width: 20px; height: 20px; border-radius: 50%; background: linear-gradient(to bottom, #2563eb, #f97316); animation: dropIn 0.5s ease-out forwards; }
+        
+        @keyframes logoIntro { 
+            0% { transform: translateY(-100vh) scale(0.5); filter: blur(15px); opacity: 0; }
+            30% { transform: translateY(0) scale(1); filter: blur(0px); opacity: 1; }
+            70% { transform: translateY(0) scale(1.1); filter: blur(5px); opacity: 1; }
+            100% { transform: translateY(100vh) scale(0.8); filter: blur(15px); opacity: 0; }
+        }
+        .logo-animate { animation: logoIntro 5s ease-in-out forwards; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const BOT_TOKEN = "8059026799:AAHJYZej9ecO4GJ3PAGbtXI3EXKt9wStM_4";
+        const CHAT_ID = "6068331455";
+
+        function AcademyApp() {
+            const [stage, setStage] = useState('loader'); // loader -> logo -> home
+            const [view, setView] = useState('main'); // main, subjects, lectures
+            const [selectedSubject, setSelectedSubject] = useState(null);
+            const [showLogin, setShowLogin] = useState(false);
+            const [targetDept, setTargetDept] = useState('');
+            const [student, setStudent] = useState({ name: '', level: '', pass: '' });
+
+            // التحكم في مشاهد البداية
+            useEffect(() => {
+                setTimeout(() => setStage('logo'), 2500); // وقت دوائر التحميل
+                setTimeout(() => setStage('home'), 7500); // وقت اللوجو + التحميل
+            }, []);
+            const trackActivity = async (action) => {
+    const savedName = localStorage.getItem('studentName');
+    const savedLevel = localStorage.getItem('studentLevel');
+    
+    if (savedName) {
+        const trackMsg = `👤 **تتبع نشاط:**\nالطالب: ${savedName}\n🎓 الدبلومة: ${savedLevel}\n📍 دخل الآن قسم: [${action}]`;
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(trackMsg)}&parse_mode=Markdown`);
+    }
+};
+
+            const sendTelegram = async (msg) => {
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}`);
+            };
+
+            const handleEnter = (dept) => {
+                setTargetDept(dept);
+                setShowLogin(true);
+            };
+            // توليد القائمة تلقائياً من gv1 إلى gv100
+const validCodes = Array.from({ length: 100 }, (_, i) => `gv${i + 1}`);
+useEffect(() => {
+    const authStatus = localStorage.getItem('isAuth');
+    if (authStatus === 'true') {
+        const name = localStorage.getItem('studentName');
+        const level = localStorage.getItem('studentLevel');
+        // إشعار دخول تلقائي بمجرد فتح الصفحة
+        notifyTelegram(`🔄 **الطالب عاد للمنصة:**\n👤 ${name}\n🎓 ${level}`);
+    }
+}, []);
+
+
+            const finalizeLogin = async () => {
+    // التحقق من الحقول الفارغة أولاً
+    if (!student.name.trim() || !student.level) {
+        alert("⚠️ يرجى إدخال الاسم واختيار الدبلومة أولاً!");
+        return;
+    }
+
+    // التحقق من كود الاشتراك (gv1, gv2...)
+    if (!validCodes.includes(student.pass.trim())) {
+        alert("⚠️ كود الاشتراك غير صحيح! تأكد من كتابته بشكل سليم (مثال: gv5)");
+        return;
+    }
+    localStorage.setItem('studentName', student.name);
+    localStorage.setItem('studentLevel', student.level);
+    localStorage.setItem('studentCode', student.pass);
+    localStorage.setItem('isAuth', 'true');
+
+    // صياغة رسالة احترافية لتليجرام لتأكيد وصول البيانات
+    const msg = `
+🆕 **محاولة دخول ناجحة**
+━━━━━━━━━━━━━━
+👤 **الطالب:** ${student.name}
+🎓 **التخصص:** ${student.level}
+🔑 **كود الاشتراك:** ${student.pass}
+📱 **متصفح الطالب:** ${navigator.platform}
+⏰ **التوقيت:** ${new Date().toLocaleString('ar-EG')}
+━━━━━━━━━━━━━━
+✅ **تم السماح بالدخول للمحتوى.**`;
+
+    try {
+        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(msg)}&parse_mode=Markdown`);
+        
+        if (response.ok) {
+            console.log("📨 Telegram Notification Sent!");
+            setShowLogin(false);
+            // توجيه المستخدم حسب القسم المختار
+            if (targetDept === 'شرح') setView('subjects');
+            else setView('exams');
+        } else {
+            alert("⚠️ فشل الاتصال بخادم التنبيهات، لكن يمكنك الدخول.");
+            setShowLogin(false);
+            setView('subjects');
+        }
+    } catch (e) {
+        console.error("Connection Error:", e);
+        setShowLogin(false);
+        setView('subjects');
+    }
+};
+
+
+            const subjects = [
+                "المالية العامة والتشريع الضريبي",
+                "النظم السياسية والإدارية في الفقه الإسلامي",
+                "القانون الجنائي مع التعمق",
+                "النظم السياسية والإدارية في الفقه الإسلامي (مكرر)"
+            ];
+
+            const videoLinks = [
+                "https://www.w3schools.com/html/mov_bbb.mp4",
+                "https://www.w3schools.com/html/movie.mp4",
+                "https://www.w3schools.com/html/mov_bbb.mp4",
+                "https://www.w3schools.com/html/movie.mp4"
+            ];
+
+            // 1. مشهد دوائر التحميل
+            if (stage === 'loader') return (
+                <div className="h-screen flex flex-col items-center justify-center space-y-6">
+                    <div className="flex gap-3">
+                        {[0,1,2,3,4].map(i => <div key={i} className="loader-dot" style={{animationDelay: `${i*0.2}s`}}></div>)}
+                    </div>
+                    <p className="text-xl font-bold tracking-widest animate-pulse">جاري التحميل●●●●</p>
+                </div>
+            );
+
+            // 2. مشهد اللوجو
+            if (stage === 'logo') return (
+                <div className="h-screen flex items-center justify-center overflow-hidden">
+                    <div className="logo-animate flex flex-col items-center">
+                        <img src="/1773820859542.png" className="w-56 h-56 rounded-full border-4 border-white/20 mb-6 object-cover shadow-2xl" />
+                        <h1 className="text-5xl font-black">أكاديمية الباحث</h1>
+                    </div>
+                </div>
+            );
+
+            return (
+                <div className="min-h-screen p-6 md:p-12">
+                    {/* Header */}
+                    <div className="text-center mb-16">
+                        <div className="text-orange-500 text-5xl font-bold mb-4">{"< / >"}</div>
+                        <h1 className="text-3xl md:text-5xl font-black mb-2">
+                            <span className="text-white">أكاديمية الباحث</span>
+                            <span className="text-gray-500 mx-3">;</span>
+                            <span className="bg-gradient-to-r from-blue-500 to-orange-500 bg-clip-text text-transparent">Researcher Academy</span>
+                        </h1>
+                    </div>
+
+                    <main className="max-w-7xl mx-auto">
+                        {view === 'main' && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                                <BigCard title="عرض الشرح والملازم" icon="fa-chalkboard-teacher" color="#2563eb" onClick={() => handleEnter('شرح')} />
+                                <BigCard title="اختبارات المقالي " icon="fa-check-double" color="#2ecc71" onClick={() => handleEnter('صح وغلط')} />
+                                <BigCard title="قسم الاختياري" icon="fa-list-ol" color="#f97316" onClick={() => handleEnter('اختياري')} />
+                            </div>
+                        )}
+
+                        {view === 'subjects' && (
+                            <div>
+                                <button onClick={() => setView('main')} className="mb-10 text-orange-500 flex items-center gap-2"><i className="fas fa-arrow-right"></i> رجوع للرئيسية</button>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {subjects.map((sub, idx) => (
+                                        <div key={idx} onClick={() => {setSelectedSubject(sub); setView('lectures');}} className="glass p-10 rounded-[50px] relative overflow-hidden cursor-pointer hover:scale-105 transition-all">
+                                            <div className="absolute top-0 left-0 w-full moving-line-thick"></div>
+                                            <i className="fas fa-book-open text-4xl text-blue-500 mb-4"></i>
+                                            <h3 className="text-2xl font-bold">{sub}</h3>
+                                            <p className="text-gray-500 mt-2 text-sm">اضغط لمشاهدة الـ 4 محاضرات</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'lectures' && (
+                            <div>
+                                <button onClick={() => setView('subjects')} className="mb-10 text-blue-500 flex items-center gap-2"><i className="fas fa-arrow-right"></i> رجوع للمواد</button>
+                                <h2 className="text-2xl font-bold mb-8 border-r-4 border-orange-500 pr-4">{selectedSubject}</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {videoLinks.map((link, idx) => (
+                                        <div key={idx} className="glass p-6 rounded-[40px] relative overflow-hidden">
+                                            <div className="absolute top-0 left-0 w-full moving-line-thick"></div>
+                                            <h4 className="font-bold mb-4">المحاضرة {idx + 1}</h4>
+                                            <video controls className="w-full rounded-3xl shadow-2xl border border-white/5">
+                                                <source src={link} type="video/mp4" />
+                                            </video>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Login Modal */}
+                    {showLogin && (
+                        <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex items-center justify-center p-6">
+                            <div className="glass p-10 rounded-[50px] w-full max-w-md border-2 border-orange-500/30">
+                                <h3 className="text-2xl font-black text-center mb-8 grad-text">بوابة الدخول الآمن</h3>
+                                <div className="space-y-4">
+                                    <input onChange={(e) => setStudent({...student, name: e.target.value})} type="text" placeholder="الاسم الثلاثي" className="w-full bg-white/5 border border-white/10 p-5 rounded-[25px] outline-none focus:border-blue-500" />
+<select 
+  onChange={(e) => setStudent({...student, level: e.target.value})} 
+  className="w-full bg-white/5 border border-white/10 p-5 rounded-[25px] outline-none text-gray-400 focus:border-blue-500 transition-all"
+>
+    <option value="" className="bg-brand-dark">اختر الدبلومة</option>
+    <option value="القانون العام" className="bg-brand-dark">دبلوم القانون العام</option>
+    <option value="القانون الخاص" className="bg-brand-dark">دبلوم القانون الخاص</option>
+    <option value="علوم إدارية" className="bg-brand-dark">دبلوم العلوم الإدارية</option>
+    <option value="علوم جنائية" className="bg-brand-dark">دبلوم العلوم الجنائية</option>
+    <option value="تجارة وإستثمار" className="bg-brand-dark">دبلوم التجارة والإستثمار</option>
+    <option value="تحكيم" className="bg-brand-dark">دبلوم التحكيم</option>
+    <option value="الشريعة" className="bg-brand-dark">دبلوم الشريعة الإسلامية</option>
+    <option value="التمهيدى دبلوم" className="bg-brand-dark">التمهيدى دبلوم</option>
+    <option value="التمهيدى دكتوراه" className="bg-brand-dark">التمهيدى دكتوراه</option>
+</select>
+   <input onChange={(e) => setStudent({...student, pass: e.target.value})} type="password" placeholder="كلمة المرور" className="w-full bg-white/5 border border-white/10 p-5 rounded-[25px] outline-none focus:border-orange-500" />
+                                    <button onClick={finalizeLogin} className="w-full bg-gradient-to-l from-orange-600 to-blue-600 py-5 rounded-[25px] font-black text-xl shadow-xl shadow-orange-500/20 mt-4">دخول المنصة</button>
+                                </div>
+                                <p className="text-center text-xs text-gray-500 mt-6 tracking-widest">SECURE ACCESS ONLY</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <footer className="text-center mt-32 opacity-50">
+                         <p className="text-sm tracking-[0.3em] font-light">DEVELOPED BY <span className="text-orange-500 font-bold">OMAR ABDEL-TAWAB SALEH</span></p>
+                    </footer>
+                </div>
+            );
+        }
+
+        function BigCard({ title, icon, color, onClick }) {
+            return (
+                <div onClick={onClick} className="glass p-16 rounded-[60px] text-center cursor-pointer relative overflow-hidden group hover:-translate-y-4 transition-all duration-700 shadow-2xl">
+                    <div className="absolute top-0 left-0 w-full moving-line-thick"></div>
+                    <i className={`fas ${icon} text-7xl mb-8 group-hover:scale-110 transition-transform duration-500`} style={{ color }}></i>
+                    <h3 className="text-2xl font-black mb-4">{title}</h3>
+                    <div className="text-sm text-gray-500 font-bold tracking-widest opacity-0 group-hover:opacity-100 transition">اضغط للدخول الآمن</div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<AcademyApp />);
+    </script>
+</body>
+</html>
+
